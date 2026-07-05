@@ -1,0 +1,18 @@
+{
+  "name": "Game Moderator",
+  "short_name": "Moderator",
+  "description": "A guided game moderator app with auto-save, private role reveal, live counts and game log.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07030a",
+  "theme_color": "#8b0000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
