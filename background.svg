@@ -1,17 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
   <defs>
-    <linearGradient id="overlay" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#050204" stop-opacity="0.14"/>
-      <stop offset="55%" stop-color="#4a0f1c" stop-opacity="0.16"/>
-      <stop offset="100%" stop-color="#050204" stop-opacity="0.32"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="42%" r="70%">
-      <stop offset="0%" stop-color="#d4af37" stop-opacity="0.06"/>
-      <stop offset="55%" stop-color="#4a0f1c" stop-opacity="0.08"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0.14"/>
+    <radialGradient id="main" cx="50%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#4a0f1c"/>
+      <stop offset="45%" stop-color="#16070b"/>
+      <stop offset="100%" stop-color="#050204"/>
     </radialGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="70%" stop-color="#000000" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f3d982"/>
+      <stop offset="55%" stop-color="#d4af37"/>
+      <stop offset="100%" stop-color="#7b5617"/>
+    </linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="8"/></filter>
   </defs>
-  <image href="8005AE16-3EE2-4332-B447-2643E7312DC0.png" x="0" y="0" width="1600" height="900" preserveAspectRatio="xMidYMid slice"/>
-  <rect width="1600" height="900" fill="url(#overlay)"/>
-  <rect width="1600" height="900" fill="url(#glow)"/>
+  <rect width="1600" height="900" fill="url(#main)"/>
+  <g opacity="0.20" filter="url(#soft)">
+    <circle cx="1200" cy="120" r="250" fill="#d4af37"/>
+    <circle cx="260" cy="180" r="260" fill="#8e1f39"/>
+  </g>
+  <g opacity="0.16" fill="#d4af37">
+    <rect x="95" y="315" width="42" height="285"/>
+    <rect x="160" y="255" width="46" height="345"/>
+    <rect x="230" y="350" width="52" height="250"/>
+    <rect x="1290" y="300" width="42" height="300"/>
+    <rect x="1360" y="230" width="52" height="370"/>
+    <rect x="1442" y="355" width="44" height="245"/>
+  </g>
+  <g opacity="0.16">
+    <path d="M690 730c10-120 70-210 150-210s140 90 150 210H690z" fill="#000"/>
+    <ellipse cx="840" cy="485" rx="58" ry="66" fill="#000"/>
+    <path d="M742 465h196c22 0 22 32 0 32H742c-22 0-22-32 0-32z" fill="#000"/>
+    <path d="M782 462c22-54 92-56 116 0z" fill="#000"/>
+  </g>
+  <rect width="1600" height="900" fill="url(#floor)"/>
+  <g opacity="0.18" stroke="url(#gold)" fill="none">
+    <rect x="42" y="42" width="1516" height="816" rx="26" stroke-width="3"/>
+    <rect x="70" y="70" width="1460" height="760" rx="18" stroke-width="1"/>
+  </g>
 </svg>
