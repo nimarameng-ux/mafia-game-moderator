@@ -1,22 +1,47 @@
-const CACHE_NAME = 'red-gold-app-v1';
-const APP_FILES = ['/index.html', '/manifest.json', '/icon.svg'];
+const CACHE_NAME = 'mafia-moderator-v14-2';
+const APP_FILES = ['/index.html', '/manifest.json', '/icon.svg', '/background.svg'];
 
-self.addEventListener('install', function(event) {
-  event.waitUntil(caches.open(CACHE_NAME).then(function(cache) {
-    return cache.addAll(APP_FILES);
-  }));
+self.addEventListener('install', event => {
+  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES))
+  );
 });
 
-self.addEventListener('activate', function(event) {
-  event.waitUntil(caches.keys().then(function(keys) {
-    return Promise.all(keys.map(function(key) {
-      if (key !== CACHE_NAME) return caches.delete(key);
-    }));
-  }));
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
+      .then(() => self.clients.claim())
+  );
 });
 
-self.addEventListener('fetch', function(event) {
-  event.respondWith(caches.match(event.request).then(function(cached) {
-    return cached || fetch(event.request);
-  }));
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+
+  const requestUrl = new URL(event.request.url);
+  const isNavigation = event.request.mode === 'navigate' || requestUrl.pathname === '/' || requestUrl.pathname.endsWith('/index.html');
+
+  if (isNavigation) {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' })
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put('/index.html', copy));
+          return response;
+        })
+        .catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
+  event.respondWith(
+    fetch(event.request)
+      .then(response => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
+  );
 });
