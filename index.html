@@ -1,1 +1,443 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#4a0f1c"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg"><title>Mafia Game Moderator</title><style>:root{--panel:rgba(10,5,7,.9);--line:rgba(212,175,55,.34);--txt:#fff7e6;--mut:#dfcfa3;--gold:#d4af37;--gold2:#f6df8c;--green:#22c55e}*{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:linear-gradient(rgba(5,2,4,.58),rgba(5,2,4,.84)),url('background.svg') center/cover fixed no-repeat,#070304}button,input,select,textarea{font:inherit}button{border:1px solid rgba(212,175,55,.36);border-radius:15px;padding:13px 15px;background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1d1102;font-weight:950;box-shadow:0 10px 25px #0008}button.secondary{background:rgba(212,175,55,.13);color:var(--gold2)}button.danger{background:linear-gradient(180deg,#a32945,#6e1028);color:white}button.good{background:linear-gradient(180deg,#39dc7b,#16a34a);color:#031b0b}button:disabled{opacity:.45;filter:grayscale(1)}input,select,textarea{width:100%;border:1px solid #d7c27a;border-radius:14px;padding:12px;background:#fffaf0;color:#16080b}textarea{min-height:120px}label{font-weight:900;color:#f4ddb0;display:block;margin:0 0 6px}.wrap{max-width:1120px;margin:auto;padding:14px}.top{display:flex;justify-content:space-between;gap:10px;margin:8px 0 14px}.brand h1{font-size:clamp(30px,7vw,52px);line-height:1;margin:0}.hint,.small{color:var(--mut);line-height:1.45}.small{font-size:13px}.credit{font-size:11px;opacity:.75;color:#ead99b}.card{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:16px;margin:14px 0;box-shadow:0 24px 60px #0009;backdrop-filter:blur(8px)}.dash{position:sticky;top:0;z-index:10;background:rgba(5,2,4,.97);border:1px solid var(--line);border-radius:22px;padding:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.dash div{text-align:center;background:rgba(212,175,55,.08);border-radius:14px;padding:9px}.dash b{font-size:23px;display:block}.dash span{font-size:11px;color:var(--mut);font-weight:900}.players{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.row{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:17px;padding:12px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.row.dead{opacity:.45;filter:grayscale(1)}.row.done{border-color:var(--green);background:rgba(34,197,94,.12)}.name{font-weight:950}.pill{display:inline-flex;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:950;background:rgba(212,175,55,.14);border:1px solid var(--line);color:var(--gold2)}.ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);border-radius:15px;padding:11px;color:#dcfce7}.warn{background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.35);border-radius:15px;padding:11px;color:#fff2bf}.err{background:rgba(220,38,38,.14);border:1px solid rgba(220,38,38,.38);border-radius:15px;padding:11px;color:#fecaca}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.actions button{flex:1;min-width:140px}.log{display:grid;gap:8px;max-height:360px;overflow:auto}.log div{background:rgba(255,255,255,.055);border:1px solid var(--line);border-radius:13px;padding:10px}.modal{position:fixed;inset:0;background:#050204;display:none;align-items:center;justify-content:center;z-index:30;padding:18px}.modal.on{display:flex}.box{width:min(560px,100%);background:linear-gradient(180deg,#2b0e16,#070304);border:1px solid var(--line);border-radius:28px;padding:24px;text-align:center;display:flex;flex-direction:column;gap:16px}.role{font-size:clamp(40px,13vw,70px);font-weight:1000;color:var(--gold2);margin:0}@media(max-width:760px){.top{display:block}.players{grid-template-columns:1fr}.dash{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}.actions button{min-width:0;width:100%}}</style></head><body><div class="wrap"><div class="top"><div class="brand"><h1>Mafia Game Moderator</h1><p class="hint">Idiot-proof handler guide with autosave, live dashboard and full game log.</p><span class="credit">by Nima · Rev 13 Safety Net</span></div><div class="actions"><button class="secondary" onclick="renderHealth()">Health Check</button><button class="danger" onclick="renderMenu()">Menu</button></div></div><div id="dash" class="dash"></div><main id="app"></main></div><div id="modal" class="modal"><div class="box"><h2 id="mName"></h2><p id="mRole" class="role"></p><p id="mDesc" class="hint"></p><button class="danger" onclick="hideRole()">Hide & Mark Seen</button></div></div><script>const SAVE='nima_mafia_rev13';const R={Godfather:{n:'Godfather',t:'Mafia',d:'Mafia leader. Detective reads as Citizen. Immunity can be on/off.'},Lecter:{n:'Dr. Lecter',t:'Mafia',d:'Mafia-side shield for one Mafia player.'},Mafia:{n:'Mafia',t:'Mafia',d:'Regular Mafia team member.'},Detective:{n:'Detective',t:'Citizen',d:'Checks one player at night.'},Doctor:{n:'Citizen Doctor',t:'Citizen',d:'Saves one player at night. Self-save limit is enforced.'},Vigilante:{n:'Vigilante',t:'Citizen',d:'Can use limited night actions.'},Citizen:{n:'Citizen',t:'Citizen',d:'No night power. Talks and votes.'}};const $=id=>document.getElementById(id);let active=null;let S={phase:'setup',setupStep:0,day:1,night:1,settings:{start:'',count:8,mafia:2,actions:2,selfSaves:1,gfImmune:true},names:[],players:[],seen:[],talked:[],defence:[],votes:{},nightData:{},counters:{self:0,actions:0},lastPublic:'Game has not started yet.',logs:[],finished:false,winner:'',reason:''};function save(){localStorage.setItem(SAVE,JSON.stringify(S))}function load(){try{let x=localStorage.getItem(SAVE);if(x)S=JSON.parse(x)}catch(e){}}function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}function uid(){return Math.random().toString(36).slice(2,9)}function live(){return S.players.filter(p=>p.alive)}function aliveMafia(){return live().filter(p=>R[p.role].t==='Mafia')}function aliveCit(){return live().filter(p=>R[p.role].t==='Citizen')}function deadMafia(){return S.players.filter(p=>!p.alive&&R[p.role].t==='Mafia')}function deadCit(){return S.players.filter(p=>!p.alive&&R[p.role].t==='Citizen')}function byId(id){return S.players.find(p=>p.id===id)}function roleAlive(r){return live().find(p=>p.role===r)}function label(){if(S.finished)return'Completed';if(S.phase==='day')return'Day '+S.day;if(S.phase==='night')return'Night '+S.night;if(S.phase==='reveal')return'Role Reveal';return'Setup'}function log(type,text){S.logs.unshift({phase:label(),type,text,time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});save()}function renderDash(){let gf=S.settings.gfImmune?'ON':'OFF';$('dash').innerHTML=`<div><span>Phase</span><b>${esc(label())}</b></div><div><span>Mafia</span><b>${aliveMafia().length}/${deadMafia().length}</b><span>active/out</span></div><div><span>Citizens</span><b>${aliveCit().length}/${deadCit().length}</b><span>active/out</span></div><div><span>Limits</span><b>${S.counters.actions}/${S.settings.actions}</b><span>Vig · Dr ${S.counters.self}/${S.settings.selfSaves} · GF ${gf}</span></div>`}function layout(title,sub,body){$('app').innerHTML=`<section class="card"><h2>${title}</h2><p class="hint">${sub}</p>${body}</section>${playerCard()}${logCard()}`;renderDash();save()}function playerCard(){if(!S.players.length)return'';return`<section class="card"><h2>Players</h2><div class="players">${S.players.map(p=>`<div class="row ${p.alive?'':'dead'}"><div><div class="name">${esc(p.name)}</div><div class="small">${esc(R[p.role].n)} · ${esc(R[p.role].t)} ${p.alive?'':'· Out'}</div></div><span class="pill">${p.alive?'Active':'Out'}</span></div>`).join('')}</div></section>`}function logCard(){return`<section class="card"><h2>Game Log</h2><div class="log">${S.logs.length?S.logs.map(l=>`<div><b>${esc(l.phase)} · ${esc(l.type)}</b><br>${esc(l.text)}<div class="small">${esc(l.time)}</div></div>`).join(''):'<div>No log yet.</div>'}</div></section>`}function sel(id,arr,allowSkip=false){return`<select id="${id}">${allowSkip?'<option value="">Skip / None</option>':''}${arr.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>`}function render(){if(S.finished)return renderFinished();if(S.phase==='setup')return renderSetup();if(S.phase==='reveal')return renderReveal();if(S.phase==='day')return renderDay();if(S.phase==='night')return renderNight()}function renderSetup(){let i=S.setupStep;if(i===0)return layout('Setup 1/8 — Start Time','Confirm the start time.',`<label>Start time</label><input id="v" type="time" value="${esc(S.settings.start)}"><div class="actions"><button class="good" onclick="S.settings.start=$('v').value||new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});nextSetup('Start time confirmed')">Confirm & Next</button></div>`);if(i===1)return layout('Setup 2/8 — Player Count','Enter total number of players.',`<label>Total players</label><input id="v" type="number" min="1" max="40" value="${S.settings.count}"><div class="actions"><button class="good" onclick="S.settings.count=Math.max(1,Math.min(40,+$('v').value||8));nextSetup('Player count confirmed: '+S.settings.count)">Confirm & Next</button></div>`);if(i===2)return layout('Setup 3/8 — Mafia Count','This includes all Mafia-side players.',`<label>Mafia-side count</label><input id="v" type="number" min="1" max="12" value="${S.settings.mafia}"><div class="actions"><button class="good" onclick="S.settings.mafia=Math.max(1,Math.min(S.settings.count-1,+$('v').value||1));nextSetup('Mafia count confirmed: '+S.settings.mafia)">Confirm & Next</button></div>`);if(i===3)return layout('Setup 4/8 — Vigilante Limit','How many night actions can Vigilante use?',`<label>Vigilante actions</label><input id="v" type="number" min="0" value="${S.settings.actions}"><div class="actions"><button class="good" onclick="S.settings.actions=Math.max(0,+$('v').value||0);nextSetup('Vigilante action limit confirmed')">Confirm & Next</button></div>`);if(i===4)return layout('Setup 5/8 — Doctor Self-Save Limit','How many times can Doctor save themselves?',`<label>Doctor self-saves</label><input id="v" type="number" min="0" value="${S.settings.selfSaves}"><div class="actions"><button class="good" onclick="S.settings.selfSaves=Math.max(0,+$('v').value||0);nextSetup('Doctor self-save limit confirmed')">Confirm & Next</button></div>`);if(i===5)return layout('Setup 6/8 — Godfather Immunity','Should Godfather be protected from Vigilante night action?',`<div class="actions"><button class="good" onclick="S.settings.gfImmune=true;nextSetup('Godfather immunity ON')">Yes — Protected</button><button class="secondary" onclick="S.settings.gfImmune=false;nextSetup('Godfather immunity OFF')">No</button></div>`);if(i===6)return layout('Setup 7/8 — Player Names','Enter exactly one name per player.',`<label>Names</label><textarea id="v">${esc(S.names.join('\n'))}</textarea><div id="err" class="err hidden"></div><div class="actions"><button class="good" onclick="setNames()">Confirm Names</button></div>`);return layout('Setup 8/8 — Shuffle & Assign','Check role pool, then start private reveal.',`<div class="ok">Health check before shuffle: ${healthText()}</div><div class="warn">Role pool: ${esc(rolePreview())}</div><div class="actions"><button class="good" onclick="shuffleRoles()">Shuffle Roles & Start Reveal</button></div>`)}function nextSetup(t){log('Setup',t);S.setupStep=Math.min(7,S.setupStep+1);renderSetup()}function setNames(){let n=$('v').value.split(/\n/).map(x=>x.trim()).filter(Boolean);if(n.length!==S.settings.count){$('err').textContent=`You entered ${n.length} names. Required: ${S.settings.count}.`;$('err').classList.remove('hidden');return}S.names=n;nextSetup('Player names confirmed')}function roleList(){let n=S.settings.count,m=Math.min(S.settings.mafia,n-1),a=['Godfather'];if(m>1&&n>=7)a.push('Lecter');while(a.filter(r=>R[r].t==='Mafia').length<m)a.push('Mafia');if(a.length<n&&n>=3)a.push('Detective');if(a.length<n&&n>=4)a.push('Doctor');if(a.length<n&&n>=5)a.push('Vigilante');while(a.length<n)a.push('Citizen');return a.slice(0,n)}function rolePreview(){let c={};roleList().forEach(r=>c[R[r].n]=(c[R[r].n]||0)+1);return Object.entries(c).map(([k,v])=>v+' '+k).join(' · ')}function shuf(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}function shuffleRoles(){let names=shuf(S.names),roles=shuf(roleList());S.players=names.map((name,i)=>({id:uid(),name,role:roles[i],alive:true}));S.phase='reveal';S.seen=[];log('Shuffle','Roles assigned. Private reveal started.');renderReveal()}function renderReveal(){let all=S.players.length&&S.seen.length===S.players.length;layout('Private Role Reveal','Pass the phone to each player. Reveal must be marked before Day 1 opens.',`<div class="players">${S.players.map(p=>`<div class="row ${S.seen.includes(p.id)?'done':''}"><div><div class="name">${esc(p.name)}</div><div class="small">${S.seen.includes(p.id)?'Role seen':'Not revealed yet'}</div></div><button onclick="showRole('${p.id}')">Reveal</button></div>`).join('')}</div><div class="actions"><button class="good" ${all?'':'disabled'} onclick="startDay()">Start Day 1</button></div>`)}function showRole(id){active=id;let p=byId(id);$('mName').textContent=p.name;$('mRole').textContent=R[p.role].n;$('mDesc').textContent=R[p.role].d;$('modal').classList.add('on')}function hideRole(){if(active&&!S.seen.includes(active)){S.seen.push(active);log('Role Reveal',byId(active).name+' viewed role card.')}active=null;$('modal').classList.remove('on');renderReveal()}function startDay(){S.phase='day';S.day=1;S.dayStage='talk';S.talked=[];log('Day','Day 1 started. Conversation only.');renderDay()}function renderDay(){if(S.day===1)return renderTalk('Day 1 — Conversation','Day 1 is only talk. Tick each active player after they had an opportunity to talk.',()=>{S.phase='night';S.night=1;S.nightData={stage:0};log('Day','All players talked. Moving to Night 1.');renderNight()});if(S.dayStage==='announce')return layout(`Day ${S.day} — Public Announcement`,'Read only the public result. Do not reveal private role information.',`<div class="ok">${esc(S.lastPublic)}</div><div class="actions"><button class="good" onclick="S.dayStage='talk';S.talked=[];log('Day','Public announcement read.');renderDay()">Continue to Conversation</button></div>`);if(S.dayStage==='talk')return renderTalk(`Day ${S.day} — Conversation`,'Tick each active player after they speak.',()=>{S.dayStage='nominate';S.defence=[];S.votes={};log('Day','Conversation completed.');renderDay()});if(S.dayStage==='nominate')return layout(`Day ${S.day} — Nomination`,'Add players to defence if the group vote requires it.',`${sel('nom',live(),true)}<div class="actions"><button onclick="addDefence()">Add Selected to Defence</button><button class="good" onclick="finishNomination()">Finish Nomination Stage</button></div><div class="warn">Current defence: ${S.defence.map(id=>esc(byId(id)?.name)).join(', ')||'None'}</div>`);if(S.dayStage==='finalvote')return renderFinalVote()}function renderTalk(title,sub,next){let all=live().every(p=>S.talked.includes(p.id));layout(title,sub,`<div class="players">${live().map(p=>`<div class="row ${S.talked.includes(p.id)?'done':''}"><div class="name">${esc(p.name)}</div><button onclick="tickTalk('${p.id}')">${S.talked.includes(p.id)?'Done':'Tick Talked'}</button></div>`).join('')}</div><div class="actions"><button class="good" ${all?'':'disabled'} onclick="completeTalk()">Next Stage</button></div>`);window.completeTalk=next}function tickTalk(id){if(!S.talked.includes(id)){S.talked.push(id);log('Talk',byId(id).name+' had opportunity to talk.')}renderDay()}function addDefence(){let id=$('nom').value;if(id&&!S.defence.includes(id)){S.defence.push(id);log('Voting',byId(id).name+' added to defence.')}renderDay()}function finishNomination(){if(!S.defence.length){log('Voting','No one went to defence. Moving to night.');nextNight();return}S.dayStage='finalvote';S.votes={};renderDay()}function renderFinalVote(){let eligible=live().filter(p=>S.defence.length===1||!S.defence.includes(p.id));let done=eligible.every(p=>S.votes[p.id]!==undefined);let opts=S.defence.map(id=>`<option value="${id}">${esc(byId(id).name)}</option>`).join('');layout(`Day ${S.day} — Final Vote`,'App records one vote per eligible player and calculates majority.',`<div class="warn">Defence: ${S.defence.map(id=>esc(byId(id).name)).join(', ')}</div><div class="players">${eligible.map(p=>`<div class="row ${S.votes[p.id]!==undefined?'done':''}"><div><div class="name">${esc(p.name)}</div><div class="small">${S.votes[p.id]?('Vote: '+esc(byId(S.votes[p.id])?.name)):'Not voted'}</div></div><select onchange="S.votes['${p.id}']=this.value;log('Vote','${esc(p.name)} vote recorded.');renderDay()"><option value="">Select vote</option>${opts}</select></div>`).join('')}</div><div class="actions"><button class="good" ${done?'':'disabled'} onclick="processVotes()">Process Vote Result</button></div>`)}function processVotes(){let eligible=live().filter(p=>S.defence.length===1||!S.defence.includes(p.id)),need=Math.floor(eligible.length/2)+1,count={};Object.values(S.votes).forEach(v=>count[v]=(count[v]||0)+1);let out=Object.entries(count).find(([id,c])=>c>=need);if(out){let p=byId(out[0]);p.alive=false;log('Game Status',p.name+' removed from game by vote.')}else log('Voting','No one reached majority. No vote removal.');if(checkWin())return renderFinished();nextNight()}function nextNight(){S.phase='night';S.night=S.day;S.nightData={stage:0};S.dayStage='announce';renderNight()}function renderNight(){let s=S.nightData.stage||0;if(s===0)return nightInfo('Night '+S.night+' — Step 1','Tell everyone to close eyes.',()=>nextNightStage('Everyone closed eyes.'));if(s===1)return nightInfo('Night '+S.night+' — Step 2','Mafia team opens eyes and identifies each other.',()=>nextNightStage('Mafia team identified each other.'));if(s===2)return nightPick('Night '+S.night+' — Step 3','Mafia selects one night choice.','mafiaChoice',live(),false);if(s===3){let lect=roleAlive('Lecter');if(!lect)return nextNightStage('No Dr. Lecter active. Step skipped.');return nightPick('Night '+S.night+' — Step 4','Dr. Lecter shields one Mafia-side player.','lecterShield',aliveMafia(),false)}if(s===4){let det=roleAlive('Detective');if(!det)return nextNightStage('No Detective active. Step skipped.');return nightPick('Night '+S.night+' — Step 5','Detective checks one active player.','detectiveCheck',live(),false)}if(s===5){let doc=roleAlive('Doctor');if(!doc)return nextNightStage('No Citizen Doctor active. Step skipped.');let arr=live().filter(p=>p.id!==doc.id||S.counters.self<S.settings.selfSaves);return nightPick('Night '+S.night+' — Step 6','Citizen Doctor selects one player to save. Self-save limit is enforced.','doctorSave',arr,false)}if(s===6){let vig=roleAlive('Vigilante');if(!vig||S.counters.actions>=S.settings.actions)return nextNightStage('No Vigilante action available. Step skipped.');return nightPick('Night '+S.night+' — Step 7','Vigilante selects one player or skips.','vigAction',live().filter(p=>p.id!==vig.id),true)}return renderNightResult()}function nightInfo(title,sub,next){layout(title,sub,`<div class="ok">Handler instruction only. Confirm when completed.</div><div class="actions"><button class="good" onclick="nightNext()">Confirm & Continue</button></div>`);window.nightNext=next}function nextNightStage(t){log('Night',t);S.nightData.stage=(S.nightData.stage||0)+1;renderNight()}function nightPick(title,sub,key,arr,allowSkip){layout(title,sub,`${sel('pick',arr,allowSkip)}<div class="actions"><button class="good" onclick="confirmNightPick('${key}')">Confirm Selection</button></div>`)}function confirmNightPick(key){let id=$('pick').value;S.nightData[key]=id||'';let p=id?byId(id):null;if(key==='doctorSave'&&p&&p.role==='Doctor')S.counters.self++;if(key==='vigAction'&&id)S.counters.actions++;log('Night',(p?p.name:'Skip')+' recorded for '+key+'.');S.nightData.stage=(S.nightData.stage||0)+1;renderNight()}function renderNightResult(){let mc=byId(S.nightData.mafiaChoice),saveP=byId(S.nightData.doctorSave),vig=byId(S.nightData.vigAction),shield=byId(S.nightData.lecterShield),det=byId(S.nightData.detectiveCheck);let msgs=[],publics=[];if(det){let res=det.role==='Godfather'?'Citizen':R[det.role].t;msgs.push('Detective result for '+det.name+': '+res+'.')}if(mc){if(saveP&&saveP.id===mc.id){msgs.push(mc.name+' was selected by Mafia but saved by Doctor.')}else{mc.alive=false;publics.push(mc.name+' was removed overnight.');msgs.push(mc.name+' removed by Mafia night choice.')}}if(vig){let blocked=false;if(shield&&shield.id===vig.id)blocked=true;if(vig.role==='Godfather'&&S.settings.gfImmune)blocked=true;if(blocked)msgs.push('Vigilante action was blocked.');else if(vig.alive){vig.alive=false;publics.push(vig.name+' was removed overnight.');msgs.push(vig.name+' removed by Vigilante action.')}}S.lastPublic=publics.length?publics.join(' '):'No one was removed overnight.';S.nightData.private=msgs.join(' ');log('Night Result',S.nightData.private||S.lastPublic);layout('Night '+S.night+' — Private Result','Read this privately. Next screen/day will show public announcement only.',`<div class="warn">${esc(S.nightData.private||'No private events.')}</div><div class="ok">Public announcement: ${esc(S.lastPublic)}</div><div class="actions"><button class="good" onclick="afterNight()">Confirm Result & Continue</button></div>`)}function afterNight(){if(checkWin())return renderFinished();S.phase='day';S.day=S.night+1;S.dayStage='announce';log('Night','Moving to Day '+S.day+'.');renderDay()}function checkWin(){let m=aliveMafia().length,c=aliveCit().length;if(S.players.length&&m===0){finish('Citizens','All Mafia-side players have been removed.');return true}if(S.players.length&&m>=c){finish('Mafia','Living Mafia count is equal to or greater than living Citizen count.');return true}return false}function finish(w,r){S.finished=true;S.winner=w;S.reason=r;log('Game Completed',w+' win. '+r);renderFinished()}function renderFinished(){layout('Game Completed','The app stopped automatically based on the approved win condition.',`<div class="ok"><b>Winner: ${esc(S.winner)}</b><br>${esc(S.reason)}</div><div class="warn">Final Count: Mafia ${aliveMafia().length} active / ${deadMafia().length} out · Citizens ${aliveCit().length} active / ${deadCit().length} out</div><div class="actions"><button class="secondary" onclick="renderHealth()">View Health Check</button><button class="danger" onclick="renderMenu()">Menu</button></div>`)}function healthText(){return'Autosave ON · Manual reset only · Unlimited day/night loop · Win condition locked · Active players only selectable'}function renderHealth(){layout('Health & Safety Check','This screen confirms the app safety rules.',`<div class="ok">${healthText()}</div><div class="warn">Saved game: ${localStorage.getItem(SAVE)?'YES — closing the app will not clear it':'NO saved game yet'}</div><div class="warn">Current state: ${esc(label())}. Last public result: ${esc(S.lastPublic)}</div><div class="actions"><button class="good" onclick="render()">Return to Current Step</button></div>`)}function renderMenu(){layout('Menu','Reset requires confirmation. Normal game only finishes through win condition.',`<div class="actions"><button class="secondary" onclick="render()">Continue Current Game</button><button class="good" onclick="renderHealth()">Health Check</button><button class="danger" onclick="confirmReset()">Full Reset / New Game</button></div>`)}function confirmReset(){layout('Confirm Reset','This will delete the saved game. Only use this to start again manually.',`<div class="err">Are you sure? This cannot be undone.</div><div class="actions"><button class="secondary" onclick="renderMenu()">Cancel</button><button class="danger" onclick="resetAll()">Yes, Reset Game</button></div>`)}function resetAll(){localStorage.removeItem(SAVE);S={phase:'setup',setupStep:0,day:1,night:1,settings:{start:'',count:8,mafia:2,actions:2,selfSaves:1,gfImmune:true},names:[],players:[],seen:[],talked:[],defence:[],votes:{},nightData:{},counters:{self:0,actions:0},lastPublic:'Game has not started yet.',logs:[],finished:false,winner:'',reason:''};renderSetup()}load();render();</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#4a0f1c">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<title>Mafia Game Moderator</title>
+<style>
+:root{--panel:rgba(10,5,7,.91);--line:rgba(212,175,55,.34);--txt:#fff7e6;--mut:#dfcfa3;--gold:#d4af37;--gold2:#f6df8c;--green:#22c55e;--red:#8e1f39}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:linear-gradient(rgba(5,2,4,.58),rgba(5,2,4,.84)),url('background.svg') center/cover fixed no-repeat,#070304}
+button,input,select,textarea{font:inherit}
+button{border:1px solid rgba(212,175,55,.36);border-radius:15px;padding:13px 15px;background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1d1102;font-weight:950;box-shadow:0 10px 25px #0008;cursor:pointer}
+button.secondary{background:rgba(212,175,55,.13);color:var(--gold2)}
+button.danger{background:linear-gradient(180deg,#a32945,#6e1028);color:#fff}
+button.good{background:linear-gradient(180deg,#39dc7b,#16a34a);color:#031b0b}
+button:disabled{opacity:.42;filter:grayscale(1);cursor:not-allowed}
+input,select,textarea{width:100%;border:1px solid #d7c27a;border-radius:14px;padding:12px;background:#fffaf0;color:#16080b}
+textarea{min-height:120px}
+label{font-weight:900;color:#f4ddb0;display:block;margin:0 0 6px}
+.wrap{max-width:1120px;margin:auto;padding:14px}
+.top{display:flex;justify-content:space-between;gap:10px;margin:8px 0 14px}
+.brand h1{font-size:clamp(30px,7vw,52px);line-height:1;margin:0}
+.hint,.small{color:var(--mut);line-height:1.45}.small{font-size:13px}.credit{font-size:11px;opacity:.75;color:#ead99b}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:16px;margin:14px 0;box-shadow:0 24px 60px #0009;backdrop-filter:blur(8px)}
+.dash{position:sticky;top:0;z-index:10;background:rgba(5,2,4,.97);border:1px solid var(--line);border-radius:22px;padding:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.dash div{text-align:center;background:rgba(212,175,55,.08);border-radius:14px;padding:9px}.dash b{font-size:23px;display:block}.dash span{font-size:11px;color:var(--mut);font-weight:900}
+.players{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.row{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:17px;padding:12px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.row.dead{opacity:.45;filter:grayscale(1)}.row.done{border-color:var(--green);background:rgba(34,197,94,.12)}
+.name{font-weight:950}.pill{display:inline-flex;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:950;background:rgba(212,175,55,.14);border:1px solid var(--line);color:var(--gold2)}
+.ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);border-radius:15px;padding:11px;color:#dcfce7}
+.warn{background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.35);border-radius:15px;padding:11px;color:#fff2bf}
+.err{background:rgba(220,38,38,.14);border:1px solid rgba(220,38,38,.38);border-radius:15px;padding:11px;color:#fecaca}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.actions button{flex:1;min-width:140px}
+.log{display:grid;gap:8px;max-height:360px;overflow:auto}.log div{background:rgba(255,255,255,.055);border:1px solid var(--line);border-radius:13px;padding:10px}
+.modal{position:fixed;inset:0;background:#050204;display:none;align-items:center;justify-content:center;z-index:30;padding:18px}.modal.on{display:flex}
+.box{width:min(560px,100%);background:linear-gradient(180deg,#2b0e16,#070304);border:1px solid var(--line);border-radius:28px;padding:24px;text-align:center;display:flex;flex-direction:column;gap:16px}
+.role{font-size:clamp(40px,13vw,70px);font-weight:1000;color:var(--gold2);margin:0}
+.pass{font-size:clamp(28px,8vw,48px);font-weight:1000;margin:0}
+@media(max-width:760px){.top{display:block}.players{grid-template-columns:1fr}.dash{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}.actions button{min-width:0;width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <h1>Mafia Game Moderator</h1>
+      <p class="hint">Step-by-step handler guide with autosave, live dashboard and full game log.</p>
+      <span class="credit">by Nima · Rev 14 Stabilised</span>
+    </div>
+    <div class="actions">
+      <button class="secondary" onclick="renderHealth()">Health Check</button>
+      <button class="danger" onclick="renderMenu()">Menu</button>
+    </div>
+  </div>
+  <div id="dash" class="dash"></div>
+  <main id="app"></main>
+</div>
+
+<div id="modal" class="modal">
+  <div class="box">
+    <div id="passView">
+      <p class="small">PASS THE PHONE TO</p>
+      <h2 id="passName" class="pass"></h2>
+      <button class="good" onclick="showRole()">Reveal My Role</button>
+    </div>
+    <div id="roleView" style="display:none">
+      <p class="small">PRIVATE ROLE</p>
+      <h2 id="mName"></h2>
+      <p id="mRole" class="role"></p>
+      <p id="mTeam" class="pill"></p>
+      <p id="mDesc" class="hint"></p>
+      <button class="danger" onclick="hideRoleAndAdvance()">Hide Role & Continue</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SAVE='nima_mafia_rev14';
+const OLD_SAVE='nima_mafia_rev13';
+const R={
+ Godfather:{n:'Godfather',t:'Mafia',d:'Lead the Mafia team. The Detective reads you as Citizen. Godfather immunity follows the setup rule.'},
+ Lecter:{n:'Dr. Lecter',t:'Mafia',d:'Choose one Mafia-side player to shield during the night.'},
+ Mafia:{n:'Mafia',t:'Mafia',d:'Work with the Mafia team and follow the nightly decision.'},
+ Detective:{n:'Detective',t:'Citizen',d:'Choose one active player each night. The handler gives a private Mafia or Citizen result.'},
+ Doctor:{n:'Citizen Doctor',t:'Citizen',d:'Choose one active player to save each night. Your self-save limit is enforced by the app.'},
+ Vigilante:{n:'Vigilante',t:'Citizen',d:'You may use a limited night action. The app tracks the remaining allowance.'},
+ Citizen:{n:'Citizen',t:'Citizen',d:'No night power. Participate in conversation and voting.'}
+};
+const $=id=>document.getElementById(id);
+let activeRevealId=null;
+const fresh=()=>({
+ version:14,phase:'setup',step:'setup',setupStep:0,day:1,night:1,
+ settings:{start:'',count:8,mafia:2,actions:2,selfSaves:1,gfImmune:true},
+ names:[],players:[],seen:[],revealIndex:0,talked:[],defence:[],votes:{},
+ nightData:{stage:0,mafiaTarget:'',lecterShield:'',detectiveCheck:'',doctorSave:'',vigilanteTarget:''},
+ counters:{self:0,actions:0},lastPublic:'Game has not started yet.',
+ logs:[],finished:false,winner:'',reason:'',lastSaved:''
+});
+let S=fresh();
+
+function save(){
+  S.lastSaved=new Date().toISOString();
+  localStorage.setItem(SAVE,JSON.stringify(S));
+}
+function load(){
+  try{
+    const current=localStorage.getItem(SAVE);
+    if(current){S=Object.assign(fresh(),JSON.parse(current));return}
+    const old=localStorage.getItem(OLD_SAVE);
+    if(old){
+      const o=JSON.parse(old);
+      S=Object.assign(fresh(),o,{version:14});
+      if(S.phase==='reveal'){
+        S.revealIndex=Math.max(0,S.players.findIndex(p=>!S.seen.includes(p.id)));
+        if(S.revealIndex<0)S.revealIndex=S.players.length;
+      }
+      save();
+    }
+  }catch(e){S=fresh()}
+}
+function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function uid(){return Math.random().toString(36).slice(2,10)}
+function live(){return S.players.filter(p=>p.alive)}
+function team(p){return R[p.role].t}
+function aliveMafia(){return live().filter(p=>team(p)==='Mafia')}
+function aliveCit(){return live().filter(p=>team(p)==='Citizen')}
+function deadMafia(){return S.players.filter(p=>!p.alive&&team(p)==='Mafia')}
+function deadCit(){return S.players.filter(p=>!p.alive&&team(p)==='Citizen')}
+function byId(id){return S.players.find(p=>p.id===id)}
+function roleAlive(role){return live().find(p=>p.role===role)}
+function label(){
+ if(S.finished)return'Completed';
+ if(S.phase==='day')return'Day '+S.day;
+ if(S.phase==='night')return'Night '+S.night;
+ if(S.phase==='reveal')return'Role Reveal';
+ return'Setup';
+}
+function stepLabel(){
+ if(S.phase==='setup')return'Setup '+(S.setupStep+1)+'/8';
+ if(S.phase==='reveal')return'Player '+Math.min(S.revealIndex+1,S.players.length)+'/'+S.players.length;
+ if(S.phase==='day')return S.step==='talk'?'Conversation':S.step==='nominate'?'Nomination':S.step==='vote'?'Final Vote':'Day Result';
+ if(S.phase==='night')return'Night Step '+(S.nightData.stage+1);
+ return'Finished';
+}
+function log(type,text){
+ S.logs.unshift({phase:label(),type,text,time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
+ save();
+}
+function renderDash(){
+ const gf=S.settings.gfImmune?'ON':'OFF';
+ $('dash').innerHTML=`
+ <div><span>Phase</span><b>${esc(label())}</b><span>${esc(stepLabel())}</span></div>
+ <div><span>Mafia</span><b>${aliveMafia().length}/${deadMafia().length}</b><span>active/out</span></div>
+ <div><span>Citizens</span><b>${aliveCit().length}/${deadCit().length}</b><span>active/out</span></div>
+ <div><span>Limits</span><b>${S.counters.actions}/${S.settings.actions}</b><span>Vig · Dr ${S.counters.self}/${S.settings.selfSaves} · GF ${gf}</span></div>`;
+}
+function layout(title,sub,body,{players=true,logs=true}={}){
+ $('app').innerHTML=`<section class="card"><h2>${title}</h2><p class="hint">${sub}</p>${body}</section>${players?playerCard():''}${logs?logCard():''}`;
+ renderDash();save();
+}
+function playerCard(){
+ if(!S.players.length)return'';
+ return`<section class="card"><h2>Players</h2><div class="players">${S.players.map(p=>`
+ <div class="row ${p.alive?'':'dead'}">
+ <div><div class="name">${esc(p.name)}</div><div class="small">${esc(R[p.role].n)} · ${esc(R[p.role].t)} ${p.alive?'':'· Out'}</div></div>
+ <span class="pill">${p.alive?'Active':'Out'}</span></div>`).join('')}</div></section>`;
+}
+function logCard(){
+ return`<section class="card"><h2>Game Log</h2><div class="log">${S.logs.length?S.logs.map(l=>`
+ <div><b>${esc(l.phase)} · ${esc(l.type)}</b><br>${esc(l.text)}<div class="small">${esc(l.time)}</div></div>`).join(''):'<div>No log yet.</div>'}</div></section>`;
+}
+function options(arr,skip=false){
+ return`${skip?'<option value="">Skip / None</option>':''}${arr.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}`;
+}
+function render(){
+ if(S.finished)return renderFinished();
+ if(S.phase==='setup')return renderSetup();
+ if(S.phase==='reveal')return renderReveal();
+ if(S.phase==='day')return renderDay();
+ if(S.phase==='night')return renderNight();
+ S.phase='setup';renderSetup();
+}
+
+function renderSetup(){
+ const i=S.setupStep;
+ if(i===0)return layout('Setup 1/8 — Start Time','Confirm the game start time.',`<label>Start time</label><input id="v" type="time" value="${esc(S.settings.start)}"><div class="actions"><button class="good" onclick="confirmStart()">Confirm & Next</button></div>`,{players:false});
+ if(i===1)return layout('Setup 2/8 — Player Count','Enter the total number of players.',`<label>Total players</label><input id="v" type="number" min="5" max="40" value="${S.settings.count}"><div class="actions"><button class="good" onclick="confirmCount()">Confirm & Next</button></div>`,{players:false});
+ if(i===2)return layout('Setup 3/8 — Mafia Count','This includes Godfather, Dr. Lecter and regular Mafia.',`<label>Mafia-side count</label><input id="v" type="number" min="1" value="${S.settings.mafia}"><div id="err" class="err" style="display:none"></div><div class="actions"><button class="good" onclick="confirmMafia()">Confirm & Next</button></div>`,{players:false});
+ if(i===3)return layout('Setup 4/8 — Vigilante Limit','Set the maximum number of Vigilante night actions.',`<label>Vigilante actions</label><input id="v" type="number" min="0" value="${S.settings.actions}"><div class="actions"><button class="good" onclick="S.settings.actions=Math.max(0,+$('v').value||0);nextSetup('Vigilante limit confirmed')">Confirm & Next</button></div>`,{players:false});
+ if(i===4)return layout('Setup 5/8 — Doctor Self-Save Limit','Set how many times the Citizen Doctor may save themselves.',`<label>Doctor self-saves</label><input id="v" type="number" min="0" value="${S.settings.selfSaves}"><div class="actions"><button class="good" onclick="S.settings.selfSaves=Math.max(0,+$('v').value||0);nextSetup('Doctor self-save limit confirmed')">Confirm & Next</button></div>`,{players:false});
+ if(i===5)return layout('Setup 6/8 — Godfather Immunity','Should the Godfather survive a Vigilante action?',`<div class="actions"><button class="good" onclick="S.settings.gfImmune=true;nextSetup('Godfather immunity ON')">Yes — Immune</button><button class="secondary" onclick="S.settings.gfImmune=false;nextSetup('Godfather immunity OFF')">No</button></div>`,{players:false});
+ if(i===6)return layout('Setup 7/8 — Player Names','Enter exactly one name per player.',`<label>Names</label><textarea id="v">${esc(S.names.join('\n'))}</textarea><div id="err" class="err" style="display:none"></div><div class="actions"><button class="good" onclick="setNames()">Confirm Names</button></div>`,{players:false});
+ return layout('Setup 8/8 — Shuffle & Assign','Review the role pool before starting private reveal.',`<div class="ok">${healthText()}</div><div class="warn">Role pool: ${esc(rolePreview())}</div><div class="actions"><button class="good" onclick="shuffleRoles()">Shuffle Roles & Start Reveal</button></div>`,{players:false});
+}
+function confirmStart(){S.settings.start=$('v').value||new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});nextSetup('Start time confirmed')}
+function confirmCount(){S.settings.count=Math.max(5,Math.min(40,+$('v').value||8));nextSetup('Player count confirmed: '+S.settings.count)}
+function confirmMafia(){
+ const v=Math.max(1,+$('v').value||1),max=Math.max(1,Math.floor((S.settings.count-1)/2));
+ if(v>max){$('err').style.display='block';$('err').textContent='Mafia must start below half of all players. Maximum allowed: '+max;return}
+ S.settings.mafia=v;nextSetup('Mafia count confirmed: '+v);
+}
+function nextSetup(text){log('Setup',text);S.setupStep=Math.min(7,S.setupStep+1);renderSetup()}
+function setNames(){
+ const names=$('v').value.split(/\n/).map(x=>x.trim()).filter(Boolean);
+ if(names.length!==S.settings.count){$('err').style.display='block';$('err').textContent=`You entered ${names.length} names. Required: ${S.settings.count}.`;return}
+ if(new Set(names.map(x=>x.toLowerCase())).size!==names.length){$('err').style.display='block';$('err').textContent='Every player name must be unique.';return}
+ S.names=names;nextSetup('Player names confirmed');
+}
+function roleList(){
+ const n=S.settings.count,m=S.settings.mafia,a=['Godfather'];
+ if(m>1&&n>=7)a.push('Lecter');
+ while(a.filter(r=>R[r].t==='Mafia').length<m)a.push('Mafia');
+ if(a.length<n)a.push('Detective');
+ if(a.length<n)a.push('Doctor');
+ if(a.length<n)a.push('Vigilante');
+ while(a.length<n)a.push('Citizen');
+ return a.slice(0,n);
+}
+function rolePreview(){const c={};roleList().forEach(r=>c[R[r].n]=(c[R[r].n]||0)+1);return Object.entries(c).map(([k,v])=>v+' '+k).join(' · ')}
+function shuf(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function shuffleRoles(){
+ const names=shuf(S.names),roles=shuf(roleList());
+ S.players=names.map((name,i)=>({id:uid(),name,role:roles[i],alive:true}));
+ S.phase='reveal';S.step='reveal';S.seen=[];S.revealIndex=0;
+ log('Shuffle','Roles assigned. Private reveal started.');
+ renderReveal();
+}
+
+function renderReveal(){
+ if(S.seen.length>=S.players.length){return completeReveal()}
+ const p=S.players[S.revealIndex];
+ if(!p){S.revealIndex=0;return renderReveal()}
+ layout('Private Role Reveal',`Player ${S.revealIndex+1} of ${S.players.length}. Only the named player should look at the screen.`,`
+ <div class="ok">Completed: ${S.seen.length} / ${S.players.length}</div>
+ <div class="card" style="text-align:center"><p class="small">PASS THE PHONE TO</p><h3 class="pass">${esc(p.name)}</h3>
+ <div class="actions"><button class="good" onclick="openReveal('${p.id}')">Open Private Role</button></div></div>`,{players:false});
+}
+function openReveal(id){
+ const p=byId(id);if(!p||S.seen.includes(id))return;
+ activeRevealId=id;
+ $('passName').textContent=p.name;
+ $('mName').textContent=p.name;
+ $('mRole').textContent=R[p.role].n;
+ $('mTeam').textContent=R[p.role].t+' Team';
+ $('mDesc').textContent=R[p.role].d;
+ $('passView').style.display='block';$('roleView').style.display='none';
+ $('modal').classList.add('on');
+}
+function showRole(){$('passView').style.display='none';$('roleView').style.display='block'}
+function hideRoleAndAdvance(){
+ const id=activeRevealId,p=byId(id);
+ if(!p)return;
+ if(!S.seen.includes(id))S.seen.push(id);
+ log('Role Reveal',p.name+' confirmed their private role.');
+ activeRevealId=null;$('modal').classList.remove('on');
+ S.revealIndex=S.players.findIndex(x=>!S.seen.includes(x.id));
+ if(S.revealIndex===-1)S.revealIndex=S.players.length;
+ save();
+ if(S.revealIndex>=S.players.length)completeReveal();else renderReveal();
+}
+function completeReveal(){
+ S.phase='day';S.day=1;S.step='talk';S.talked=[];S.lastPublic='Day 1 begins. No night result.';
+ log('Transition','All roles were privately revealed. Day 1 started.');
+ renderDay();
+}
+
+function renderDay(){
+ if(checkWin())return;
+ if(S.step==='talk'){
+  const remaining=live().filter(p=>!S.talked.includes(p.id));
+  const rows=live().map(p=>`<div class="row ${S.talked.includes(p.id)?'done':''}"><div><div class="name">${esc(p.name)}</div><div class="small">${S.talked.includes(p.id)?'Completed':'Waiting to speak'}</div></div><button ${S.talked.includes(p.id)?'disabled':''} onclick="markTalked('${p.id}')">✓ Spoke</button></div>`).join('');
+  const next=S.day===1?'Move to Night 1':'Continue to Nomination';
+  return layout(`Day ${S.day} — Conversation`,`Public announcement: ${esc(S.lastPublic)}. Tick each active player after they have had an opportunity to speak.`,`
+  <div class="players">${rows}</div><div class="actions"><button class="good" ${remaining.length?'disabled':''} onclick="${S.day===1?'startNight()':'startNomination()'}">${next}</button></div>`);
+ }
+ if(S.step==='nominate'){
+  return layout(`Day ${S.day} — Nomination`,`Select every active player who reached the defence stage. Select none when nobody reached defence.`,`
+  <div class="players">${live().map(p=>`<label class="row"><span class="name">${esc(p.name)}</span><input style="width:auto" type="checkbox" class="def" value="${p.id}" ${S.defence.includes(p.id)?'checked':''}></label>`).join('')}</div>
+  <div class="actions"><button class="secondary" onclick="confirmNoDefence()">No One in Defence</button><button class="good" onclick="confirmDefence()">Confirm Defence List</button></div>`);
+ }
+ if(S.step==='vote')return renderVote();
+}
+function markTalked(id){if(!S.talked.includes(id)){S.talked.push(id);log('Conversation',byId(id).name+' had an opportunity to speak.')}renderDay()}
+function startNomination(){S.step='nominate';S.defence=[];S.votes={};log('Transition','Conversation completed. Nomination opened.');renderDay()}
+function confirmNoDefence(){S.defence=[];log('Day Result','No player reached defence.');finishDayNoRemoval()}
+function confirmDefence(){
+ S.defence=[...document.querySelectorAll('.def:checked')].map(x=>x.value);
+ if(!S.defence.length)return alert('Select at least one player, or tap No One in Defence.');
+ S.step='vote';S.votes={};log('Voting',S.defence.map(id=>byId(id).name).join(', ')+' entered defence.');renderDay();
+}
+function renderVote(){
+ const defs=S.defence.map(byId).filter(Boolean),eligible=defs.length>1?live().filter(p=>!S.defence.includes(p.id)):live();
+ if(defs.length===1){
+  const d=defs[0],yes=Number(S.votes.yes||0);
+  return layout(`Day ${S.day} — Final Vote`,`Open vote for ${esc(d.name)}. More than half of active players must vote for removal.`,`
+  <label>Votes for removal</label><input id="yes" type="number" min="0" max="${eligible.length}" value="${yes}">
+  <div class="warn">Eligible voters: ${eligible.length}. Required: ${Math.floor(eligible.length/2)+1}.</div>
+  <div class="actions"><button class="good" onclick="processSingleVote('${d.id}',${eligible.length})">Calculate Result</button></div>`);
+ }
+ const voters=eligible,choices=defs;
+ return layout(`Day ${S.day} — Blind Final Vote`,`Defence players cannot vote. Record one selection for each eligible voter.`,`
+ <div class="players">${voters.map(v=>`<div class="row"><div class="name">${esc(v.name)}</div><select id="vote_${v.id}"><option value="">No vote</option>${choices.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join('')}</select></div>`).join('')}</div>
+ <div class="warn">Eligible voters: ${voters.length}. A player requires more than half (${Math.floor(voters.length/2)+1}) to be removed.</div>
+ <div class="actions"><button class="good" onclick="processBlindVote()">Calculate Result</button></div>`);
+}
+function processSingleVote(id,total){
+ const yes=Math.max(0,Math.min(total,+$('yes').value||0)),need=Math.floor(total/2)+1;S.votes={yes,total};
+ if(yes>=need)removePlayer(id,'Day vote');else log('Day Result',byId(id).name+' was not removed. Vote '+yes+'/'+total+'.');
+ finishDayNoRemoval();
+}
+function processBlindVote(){
+ const defs=S.defence.map(byId),eligible=live().filter(p=>!S.defence.includes(p.id)),totals={};
+ defs.forEach(d=>totals[d.id]=0);
+ eligible.forEach(v=>{const x=$('vote_'+v.id).value;if(x)totals[x]++});
+ const need=Math.floor(eligible.length/2)+1,winners=Object.entries(totals).filter(([,n])=>n>=need).sort((a,b)=>b[1]-a[1]);
+ if(winners.length)removePlayer(winners[0][0],'Blind day vote');else log('Day Result','No defence player received the required majority.');
+ finishDayNoRemoval();
+}
+function finishDayNoRemoval(){
+ if(checkWin())return;
+ startNight();
+}
+function startNight(){
+ S.phase='night';S.night=S.day;S.step='night';S.nightData={stage:0,mafiaTarget:'',lecterShield:'',detectiveCheck:'',doctorSave:'',vigilanteTarget:''};
+ log('Transition','Night '+S.night+' started.');renderNight();
+}
+
+function renderNight(){
+ if(checkWin())return;
+ const N=S.nightData,stage=N.stage;
+ if(stage===0)return layout(`Night ${S.night} — Everyone Sleeps`,`Ask every player to close their eyes. Confirm only after the room is ready.`,`<div class="actions"><button class="good" onclick="nightNext('Everyone confirmed asleep')">✓ Everyone Is Ready</button></div>`);
+ if(stage===1)return layout(`Night ${S.night} — Mafia Selection`,`Ask the active Mafia team to wake and choose one active Citizen-side player.`,`<label>Mafia selection</label><select id="pick">${options(aliveCit())}</select><div class="actions"><button class="good" onclick="setNight('mafiaTarget','Mafia selection recorded')">Confirm Selection</button></div>`);
+ if(stage===2){
+  const lecter=roleAlive('Lecter');
+  if(!lecter){N.stage++;save();return renderNight()}
+  return layout(`Night ${S.night} — Dr. Lecter Shield`,`Ask Dr. Lecter to shield one active Mafia-side player.`,`<label>Shielded Mafia player</label><select id="pick">${options(aliveMafia())}</select><div class="actions"><button class="good" onclick="setNight('lecterShield','Dr. Lecter shield recorded')">Confirm Shield</button></div>`);
+ }
+ if(stage===3){
+  const det=roleAlive('Detective');if(!det){N.stage++;save();return renderNight()}
+  return layout(`Night ${S.night} — Detective Check`,`Ask the Detective to select one other active player.`, `<label>Player checked</label><select id="pick">${options(live().filter(p=>p.id!==det.id))}</select><div class="actions"><button class="good" onclick="detectiveResult()">Show Private Result</button></div>`);
+ }
+ if(stage===4){
+  const doc=roleAlive('Doctor');if(!doc){N.stage++;save();return renderNight()}
+  const allowed=live().filter(p=>p.id!==doc.id||S.counters.self<S.settings.selfSaves);
+  return layout(`Night ${S.night} — Citizen Doctor Save`,`Ask the Citizen Doctor to select one active player. Self-save is unavailable once the limit is reached.`,`<label>Player saved</label><select id="pick">${options(allowed)}</select><div class="warn">Self-saves used: ${S.counters.self}/${S.settings.selfSaves}</div><div class="actions"><button class="good" onclick="doctorSave('${doc.id}')">Confirm Save</button></div>`);
+ }
+ if(stage===5){
+  const vig=roleAlive('Vigilante');if(!vig||S.counters.actions>=S.settings.actions){N.vigilanteTarget='';N.stage++;save();return renderNight()}
+  return layout(`Night ${S.night} — Vigilante Action`,`The Vigilante may select one other active player or skip.`,`<label>Selection</label><select id="pick">${options(live().filter(p=>p.id!==vig.id),true)}</select><div class="warn">Actions used: ${S.counters.actions}/${S.settings.actions}</div><div class="actions"><button class="good" onclick="vigilantePick()">Confirm / Skip</button></div>`);
+ }
+ return processNight();
+}
+function nightNext(text){log('Night Step',text);S.nightData.stage++;save();renderNight()}
+function setNight(key,text){const v=$('pick').value;if(!v)return alert('Select a player first.');S.nightData[key]=v;nightNext(text)}
+function detectiveResult(){
+ const id=$('pick').value,p=byId(id);if(!p)return;
+ S.nightData.detectiveCheck=id;
+ const result=p.role==='Godfather'?'Citizen':team(p);
+ alert('PRIVATE DETECTIVE RESULT\n\n'+p.name+': '+result);
+ nightNext('Detective check recorded privately');
+}
+function doctorSave(docId){
+ const id=$('pick').value;if(!id)return;
+ if(id===docId){
+  if(S.counters.self>=S.settings.selfSaves)return alert('Doctor self-save limit has already been reached.');
+  S.counters.self++;
+ }
+ S.nightData.doctorSave=id;nightNext('Citizen Doctor save recorded');
+}
+function vigilantePick(){
+ const id=$('pick').value;S.nightData.vigilanteTarget=id;
+ if(id)S.counters.actions++;
+ nightNext(id?'Vigilante action recorded':'Vigilante skipped');
+}
+function processNight(){
+ const N=S.nightData,removed=[];
+ if(N.mafiaTarget&&N.mafiaTarget!==N.doctorSave)removed.push(N.mafiaTarget);
+ if(N.vigilanteTarget){
+  const p=byId(N.vigilanteTarget);
+  const blocked=N.vigilanteTarget===N.lecterShield||(p.role==='Godfather'&&S.settings.gfImmune);
+  if(!blocked&&!removed.includes(N.vigilanteTarget))removed.push(N.vigilanteTarget);
+ }
+ removed.forEach(id=>removePlayer(id,'Night result',false));
+ S.lastPublic=removed.length?removed.map(id=>byId(id).name).join(' and ')+' left the game overnight.':'No one left the game overnight.';
+ log('Night Result',S.lastPublic);
+ if(checkWin())return;
+ S.phase='day';S.day=S.night+1;S.step='talk';S.talked=[];S.defence=[];S.votes={};
+ save();renderDay();
+}
+function removePlayer(id,reason,write=true){
+ const p=byId(id);if(!p||!p.alive)return;
+ p.alive=false;if(write)log('Player Out',p.name+' left the game following '+reason+'.');
+}
+function checkWin(){
+ if(!S.players.length)return false;
+ const m=aliveMafia().length,c=aliveCit().length;
+ if(m===0){S.finished=true;S.winner='Citizens';S.reason='All Mafia-side players are out.'}
+ else if(m>=c){S.finished=true;S.winner='Mafia';S.reason='Active Mafia count is equal to or greater than active Citizen count.'}
+ if(S.finished){log('Game Completed',S.winner+' win. '+S.reason);renderFinished();return true}
+ return false;
+}
+
+function renderFinished(){
+ layout('Game Completed',`${esc(S.winner)} win. ${esc(S.reason)}`,`
+ <div class="ok"><b>Final count</b><br>Active Mafia: ${aliveMafia().length}<br>Active Citizens: ${aliveCit().length}<br>Mafia out: ${deadMafia().length}<br>Citizens out: ${deadCit().length}</div>
+ <div class="actions"><button class="secondary" onclick="renderLogOnly()">View Full Game Log</button><button class="danger" onclick="confirmReset()">Start New Game</button></div>`);
+}
+function renderHealth(){
+ const checks=[
+  ['Autosave storage available',storageOK()],
+  ['Player assignments valid',!S.players.length||S.players.length===S.settings.count],
+  ['Every player has one valid role',!S.players.length||S.players.every(p=>R[p.role])],
+  ['No duplicate player IDs',new Set(S.players.map(p=>p.id)).size===S.players.length],
+  ['Counters within limits',S.counters.self<=S.settings.selfSaves&&S.counters.actions<=S.settings.actions],
+  ['Current phase recognised',['setup','reveal','day','night'].includes(S.phase)||S.finished],
+  ['Last save exists',!!S.lastSaved]
+ ];
+ layout('Game Health Check','Green checks indicate the saved game state is internally consistent.',checks.map(([t,ok])=>`<div class="${ok?'ok':'err'}">${ok?'✓':'⚠'} ${esc(t)}</div>`).join('')+`<div class="actions"><button class="good" onclick="render()">Return to Current Step</button></div>`,{players:false});
+}
+function healthText(){
+ const max=Math.max(1,Math.floor((S.settings.count-1)/2));
+ const ok=S.names.length===S.settings.count&&S.settings.mafia<=max;
+ return ok?'✓ Setup values are internally valid.':'⚠ Setup still requires correction.';
+}
+function storageOK(){try{localStorage.setItem('_mafia_test','1');localStorage.removeItem('_mafia_test');return true}catch(e){return false}}
+function renderMenu(){
+ layout('Menu','The current game remains saved unless Full Reset is manually confirmed.',`
+ <div class="actions"><button class="good" onclick="render()">Continue Current Game</button><button class="secondary" onclick="renderLogOnly()">View Full Log</button><button class="danger" onclick="confirmReset()">Full Reset / New Game</button></div>`,{players:false});
+}
+function renderLogOnly(){layout('Full Game Log','All confirmed actions are recorded below.',`<div class="actions"><button class="good" onclick="render()">Return to Current Step</button></div>`,{players:false})}
+function confirmReset(){
+ if(!confirm('Start a new game? This permanently deletes the current saved game and log.'))return;
+ if(!confirm('Final confirmation: erase the current game?'))return;
+ localStorage.removeItem(SAVE);localStorage.removeItem(OLD_SAVE);S=fresh();save();render();
+}
+load();save();render();
+</script>
+</body>
+</html>
