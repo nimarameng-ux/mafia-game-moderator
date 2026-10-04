@@ -46,7 +46,7 @@ const preExistingSave = {
 };
 
 const htmlWithInlinedScript = html.replace(
-  /<script src="app\.js\?v=16"><\/script>/,
+  /<script src="app\.js\?v=17"><\/script>/,
   `<script>${appJs}</script>`
 );
 
@@ -79,11 +79,13 @@ assert(
 
 const rawAfter = w.localStorage.getItem('nima_mafia_rev14');
 const parsedAfter = JSON.parse(rawAfter);
-assert(parsedAfter.appVersion === 16, 'save is non-destructively stamped with appVersion:16 on next write');
+assert(parsedAfter.appVersion === 17, 'save is non-destructively stamped with appVersion:17 on next write');
 assert(parsedAfter.day === 2, 'day counter preserved through migration');
 assert(parsedAfter.players.length === 6, 'all 6 players preserved through migration');
 assert(parsedAfter.players.find((p) => p.id === 'p5').alive === false, "Emerson's death is preserved through migration");
 assert(parsedAfter.logs.length === 1, 'existing game log entries preserved through migration');
+assert(parsedAfter.settings.lecterSelfShields === 1, 'new Rev 17 Lecter self-shield setting receives a safe default during migration');
+assert(parsedAfter.counters.lecterSelf === 0, 'new Rev 17 Lecter self-shield counter receives a safe default during migration');
 
 console.log('\n=== SUMMARY ===');
 console.log(errors.length === 0 ? 'PRE-EXISTING SAVE MIGRATED SAFELY, NO DATA LOSS' : `${errors.length} FAILURE(S)`);

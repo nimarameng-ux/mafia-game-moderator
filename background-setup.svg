@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-label="Original art deco noir setup backdrop">
+  <defs>
+    <radialGradient id="room" cx="50%" cy="32%" r="78%"><stop stop-color="#86213c"/><stop offset=".45" stop-color="#351019"/><stop offset="1" stop-color="#050203"/></radialGradient>
+    <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#f5df91"/><stop offset=".48" stop-color="#b88724"/><stop offset="1" stop-color="#6e4510"/></linearGradient>
+    <linearGradient id="curtain"><stop stop-color="#16070b"/><stop offset=".5" stop-color="#68152d"/><stop offset="1" stop-color="#110509"/></linearGradient>
+    <pattern id="fan" width="120" height="120" patternUnits="userSpaceOnUse"><path d="M60 120V0M0 120L60 0l60 120M15 120L60 34l45 86" fill="none" stroke="#e0b94c" stroke-opacity=".09" stroke-width="2"/></pattern>
+    <filter id="blur"><feGaussianBlur stdDeviation="18"/></filter>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#room)"/>
+  <ellipse cx="800" cy="470" rx="470" ry="330" fill="#c43a58" fill-opacity=".12" filter="url(#blur)"/>
+  <path d="M0 0h380c-20 190-22 390 10 610L180 820 0 900zM1600 0h-380c20 190 22 390-10 610l210 210 180 80z" fill="url(#curtain)"/>
+  <path d="M0 0h1600v1000H0z" fill="url(#fan)"/>
+  <g fill="none" stroke="url(#gold)" stroke-opacity=".55">
+    <path d="M480 880V340Q800 80 1120 340v540" stroke-width="10"/>
+    <path d="M530 880V365Q800 150 1070 365v515" stroke-width="3"/>
+    <path d="M610 315h380M650 260h300" stroke-width="5"/>
+    <path d="M460 880h680M405 920h790" stroke-width="7"/>
+  </g>
+  <g transform="translate(800 510)">
+    <circle r="160" fill="#090305" fill-opacity=".8" stroke="url(#gold)" stroke-width="7"/>
+    <circle r="137" fill="none" stroke="#d4af37" stroke-opacity=".3" stroke-width="2"/>
+    <path d="M-76 76V-58l76-58 76 58V76L0 128z" fill="#14060a" stroke="#d4af37" stroke-opacity=".55" stroke-width="5"/>
+    <path d="M-52 66V-42L0-82l52 40V66L0 102z" fill="#64152c" fill-opacity=".68"/>
+    <path d="M-24 52V-12h48v64M-52-42H52" fill="none" stroke="#f0d77a" stroke-opacity=".48" stroke-width="4"/>
+    <circle cy="-22" r="11" fill="#d4af37" fill-opacity=".72"/>
+  </g>
+  <g fill="#020102" fill-opacity=".86"><path d="M0 875h1600v125H0z"/><path d="M165 875q28-92 56 0zm72 0q24-116 53 0zm1075 0q24-104 52 0zm75 0q30-126 62 0z"/></g>
+  <g fill="#e5bd50" fill-opacity=".24"><circle cx="310" cy="210" r="5"/><circle cx="1290" cy="210" r="5"/><path d="M280 210h60M1260 210h60"/></g>
+</svg>

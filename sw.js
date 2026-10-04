@@ -1,13 +1,13 @@
 /*
  * sw.js — Mafia Game Moderator
- * Rev 16 — asset caching ONLY. This service worker must never modify,
+ * Rev 17 — asset caching ONLY. This service worker must never modify,
  * rewrite, or inject <script> tags into any response. Application logic
  * lives entirely in app.js, loaded directly and deterministically by
  * index.html. See legacy/README.md for why an earlier version of this
  * file used to inject extra scripts, and why that approach was removed.
  */
-const CACHE_NAME = 'mafia-rev16-app-shell';
-const APP_FILES = ['/', '/index.html', '/app.js', '/manifest.json', '/icon.svg', '/background.svg'];
+const CACHE_NAME = 'mafia-rev17-app-shell-v4';
+const APP_FILES = ['/', '/index.html', '/app.js', '/auth.js', '/styles.css', '/manifest.json', '/icon.svg', '/mafia-emblem.png', '/background.svg', '/background-setup.svg', '/background-day.svg', '/background-night.svg', '/background-complete.svg'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES)));
@@ -24,6 +24,12 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   const request = event.request;
+
+  // Access checks are security-sensitive and must always reach the server.
+  if (new URL(request.url).pathname.startsWith('/api/')) {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   // Navigation requests: serve the real network response verbatim
   // (no rewriting), falling back to the cached app shell if offline.

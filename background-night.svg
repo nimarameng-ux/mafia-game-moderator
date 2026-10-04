@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-label="Original moonlit noir mansion backdrop">
+  <defs>
+    <radialGradient id="sky" cx="76%" cy="15%" r="82%"><stop stop-color="#45214f"/><stop offset=".38" stop-color="#181020"/><stop offset="1" stop-color="#020102"/></radialGradient>
+    <radialGradient id="moon"><stop stop-color="#fff4c4" stop-opacity=".88"/><stop offset=".32" stop-color="#d6c98c" stop-opacity=".35"/><stop offset="1" stop-color="#8a77af" stop-opacity="0"/></radialGradient>
+    <linearGradient id="fog"><stop stop-color="#9a7fb3" stop-opacity="0"/><stop offset=".5" stop-color="#9a7fb3" stop-opacity=".13"/><stop offset="1" stop-color="#9a7fb3" stop-opacity="0"/></linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="13"/></filter>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#sky)"/>
+  <circle cx="1210" cy="170" r="270" fill="url(#moon)"/>
+  <circle cx="1210" cy="170" r="92" fill="#f9edbb" fill-opacity=".64"/>
+  <path d="M1147 125q48 8 85-28-20 52-67 71z" fill="#6f6080" fill-opacity=".32"/>
+  <g fill="#d8c776" fill-opacity=".5"><circle cx="165" cy="120" r="3"/><circle cx="335" cy="210" r="4"/><circle cx="520" cy="95" r="3"/><circle cx="710" cy="235" r="3"/><circle cx="915" cy="110" r="4"/><circle cx="1420" cy="285" r="3"/></g>
+  <path d="M0 620q300-70 590 20t580-10 430 20v180H0z" fill="url(#fog)" filter="url(#soft)"/>
+  <g transform="translate(790 600)" fill="#050204" stroke="#b99143" stroke-opacity=".18">
+    <path d="M-360 235V-35h720v270z" stroke-width="5"/>
+    <path d="M-425-35L0-285 425-35z" stroke-width="7"/>
+    <path d="M-265-35v-118h105v56M190-110v-118h90v171" stroke-width="5"/>
+    <path d="M-290 235V24h100v211M-130 235V24h100v211M30 235V24h100v211M190 235V24h100v211" stroke-width="3"/>
+    <path d="M-48 235V88h96v147" fill="#2f1022" fill-opacity=".7" stroke-width="5"/>
+    <g fill="#d4af37" fill-opacity=".16"><rect x="-267" y="50" width="54" height="70"/><rect x="-107" y="50" width="54" height="70"/><rect x="53" y="50" width="54" height="70"/><rect x="213" y="50" width="54" height="70"/></g>
+  </g>
+  <g fill="#010101"><path d="M0 800q220-115 440 0 230-100 480 10 260-118 680 8v182H0z"/><path d="M130 840V555h18v285zm9-265-92-122 96 75 83-125-68 171zm1310 270V570h18v275zm9-255-91-118 95 72 77-117-63 163z"/></g>
+  <g stroke="#d4af37" stroke-opacity=".32" fill="none"><path d="M255 880V645m-38 0h76m-62 0q24-58 48 0" stroke-width="7"/><circle cx="255" cy="658" r="19" fill="#e7bd58" fill-opacity=".18"/><path d="M1340 880V645m-38 0h76m-62 0q24-58 48 0" stroke-width="7"/><circle cx="1340" cy="658" r="19" fill="#e7bd58" fill-opacity=".18"/></g>
+</svg>

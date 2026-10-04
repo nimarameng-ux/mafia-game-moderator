@@ -1,1 +1,363 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#4a0f1c"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg"><title>Mafia Game Moderator</title><style>:root{--panel:rgba(10,5,7,.91);--line:rgba(212,175,55,.34);--txt:#fff7e6;--mut:#dfcfa3;--gold:#d4af37;--gold2:#f6df8c;--green:#22c55e}*{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:linear-gradient(rgba(5,2,4,.58),rgba(5,2,4,.84)),url('background.svg') center/cover fixed no-repeat,#070304}button,input,select,textarea{font:inherit}button{border:1px solid rgba(212,175,55,.36);border-radius:15px;padding:13px 15px;background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1d1102;font-weight:950;box-shadow:0 10px 25px #0008}button.secondary{background:rgba(212,175,55,.13);color:var(--gold2)}button.danger{background:linear-gradient(180deg,#a32945,#6e1028);color:#fff}button.good{background:linear-gradient(180deg,#39dc7b,#16a34a);color:#031b0b}button:disabled{opacity:.42;filter:grayscale(1)}input,select,textarea{width:100%;border:1px solid #d7c27a;border-radius:14px;padding:12px;background:#fffaf0;color:#16080b}textarea{min-height:120px}label{font-weight:900;color:#f4ddb0;display:block;margin:0 0 6px}.wrap{max-width:1120px;margin:auto;padding:14px}.top{display:flex;justify-content:space-between;gap:10px;margin:8px 0 14px}.brand h1{font-size:clamp(30px,7vw,52px);line-height:1;margin:0}.hint,.small{color:var(--mut);line-height:1.45}.small{font-size:13px}.credit{font-size:11px;opacity:.75;color:#ead99b}.card{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:16px;margin:14px 0;box-shadow:0 24px 60px #0009;backdrop-filter:blur(8px)}.dash{position:sticky;top:0;z-index:10;background:rgba(5,2,4,.97);border:1px solid var(--line);border-radius:22px;padding:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.dash div{text-align:center;background:rgba(212,175,55,.08);border-radius:14px;padding:9px}.dash b{font-size:23px;display:block}.dash span{font-size:11px;color:var(--mut);font-weight:900}.players{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.row{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:17px;padding:12px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.row.dead{opacity:.45;filter:grayscale(1)}.row.done{border-color:var(--green);background:rgba(34,197,94,.12)}.name{font-weight:950}.pill{display:inline-flex;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:950;background:rgba(212,175,55,.14);border:1px solid var(--line);color:var(--gold2)}.ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);border-radius:15px;padding:11px;color:#dcfce7}.warn{background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.35);border-radius:15px;padding:11px;color:#fff2bf}.err{background:rgba(220,38,38,.14);border:1px solid rgba(220,38,38,.38);border-radius:15px;padding:11px;color:#fecaca}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.actions button{flex:1;min-width:140px}.log{display:grid;gap:8px;max-height:360px;overflow:auto}.log div{background:rgba(255,255,255,.055);border:1px solid var(--line);border-radius:13px;padding:10px}.modal{position:fixed;inset:0;background:#050204;display:none;align-items:center;justify-content:center;z-index:30;padding:18px}.modal.on{display:flex}.box{width:min(560px,100%);background:linear-gradient(180deg,#2b0e16,#070304);border:1px solid var(--line);border-radius:28px;padding:24px;text-align:center;display:flex;flex-direction:column;gap:16px}.role{font-size:clamp(40px,13vw,70px);font-weight:1000;color:var(--gold2);margin:0}.pass{font-size:clamp(28px,8vw,48px);font-weight:1000;margin:0}@media(max-width:760px){.top{display:block}.players{grid-template-columns:1fr}.dash{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}.actions button{min-width:0;width:100%}}</style></head><body><div class="wrap"><div class="top"><div class="brand"><h1>Mafia Game Moderator</h1><p class="hint">Step-by-step handler guide with autosave, live dashboard and full game log.</p><span class="credit">by Nima</span></div><div class="actions"><button class="secondary" onclick="health()">Health Check</button><button class="danger" onclick="menu()">Menu</button></div></div><div id="dash" class="dash"></div><main id="app"></main></div><div id="modal" class="modal"><div class="box"><div id="passView"><p class="small">PASS THE PHONE TO</p><h2 id="passName" class="pass"></h2><button class="good" onclick="showRole()">Reveal My Role</button></div><div id="roleView" style="display:none"><p class="small">PRIVATE ROLE</p><h2 id="mName"></h2><p id="mRole" class="role"></p><p id="mTeam" class="pill"></p><p id="mDesc" class="hint"></p><button class="danger" onclick="hideRoleAndAdvance()">Hide Role & Continue</button></div></div></div><script src="app.js?v=16"></script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#4a0f1c" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="icon.svg" />
+    <title>Mafia Game Moderator</title>
+    <style>
+      :root {
+        --panel: rgba(10, 5, 7, 0.91);
+        --line: rgba(212, 175, 55, 0.34);
+        --txt: #fff7e6;
+        --mut: #dfcfa3;
+        --gold: #d4af37;
+        --gold2: #f6df8c;
+        --green: #22c55e;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--txt);
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          sans-serif;
+        background:
+          linear-gradient(rgba(5, 2, 4, 0.58), rgba(5, 2, 4, 0.84)),
+          url("background.svg") center/cover fixed no-repeat,
+          #070304;
+      }
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+      button {
+        border: 1px solid rgba(212, 175, 55, 0.36);
+        border-radius: 15px;
+        padding: 13px 15px;
+        background: linear-gradient(180deg, var(--gold2), var(--gold));
+        color: #1d1102;
+        font-weight: 950;
+        box-shadow: 0 10px 25px #0008;
+      }
+      button.secondary {
+        background: rgba(212, 175, 55, 0.13);
+        color: var(--gold2);
+      }
+      button.danger {
+        background: linear-gradient(180deg, #a32945, #6e1028);
+        color: #fff;
+      }
+      button.good {
+        background: linear-gradient(180deg, #39dc7b, #16a34a);
+        color: #031b0b;
+      }
+      button:disabled {
+        opacity: 0.42;
+        filter: grayscale(1);
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid #d7c27a;
+        border-radius: 14px;
+        padding: 12px;
+        background: #fffaf0;
+        color: #16080b;
+      }
+      textarea {
+        min-height: 120px;
+      }
+      label {
+        font-weight: 900;
+        color: #f4ddb0;
+        display: block;
+        margin: 0 0 6px;
+      }
+      .wrap {
+        max-width: 1120px;
+        margin: auto;
+        padding: 14px;
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin: 8px 0 14px;
+      }
+      .brand h1 {
+        font-size: clamp(30px, 7vw, 52px);
+        line-height: 1;
+        margin: 0;
+      }
+      .hint,
+      .small {
+        color: var(--mut);
+        line-height: 1.45;
+      }
+      .small {
+        font-size: 13px;
+      }
+      .credit {
+        font-size: 11px;
+        opacity: 0.75;
+        color: #ead99b;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 16px;
+        margin: 14px 0;
+        box-shadow: 0 24px 60px #0009;
+        backdrop-filter: blur(8px);
+      }
+      .dash {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(5, 2, 4, 0.97);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 10px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .dash div {
+        text-align: center;
+        background: rgba(212, 175, 55, 0.08);
+        border-radius: 14px;
+        padding: 9px;
+      }
+      .dash b {
+        font-size: 23px;
+        display: block;
+      }
+      .dash .dash-note {
+        font-size: 12px;
+        line-height: 1.25;
+        max-height: 32px;
+        overflow: hidden;
+      }
+      .dash + main {
+        scroll-margin-top: 190px;
+      }
+      .dash span {
+        font-size: 11px;
+        color: var(--mut);
+        font-weight: 900;
+      }
+      .players {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      .row {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--line);
+        border-radius: 17px;
+        padding: 12px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+      }
+      .row.dead {
+        opacity: 0.45;
+        filter: grayscale(1);
+      }
+      .row.done {
+        border-color: var(--green);
+        background: rgba(34, 197, 94, 0.12);
+      }
+      .name {
+        font-weight: 950;
+      }
+      .pill {
+        display: inline-flex;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 950;
+        background: rgba(212, 175, 55, 0.14);
+        border: 1px solid var(--line);
+        color: var(--gold2);
+      }
+      .ok {
+        background: rgba(34, 197, 94, 0.12);
+        border: 1px solid rgba(34, 197, 94, 0.35);
+        border-radius: 15px;
+        padding: 11px;
+        color: #dcfce7;
+      }
+      .warn {
+        background: rgba(212, 175, 55, 0.12);
+        border: 1px solid rgba(212, 175, 55, 0.35);
+        border-radius: 15px;
+        padding: 11px;
+        color: #fff2bf;
+      }
+      .err {
+        background: rgba(220, 38, 38, 0.14);
+        border: 1px solid rgba(220, 38, 38, 0.38);
+        border-radius: 15px;
+        padding: 11px;
+        color: #fecaca;
+      }
+      .actions {
+        display: flex;
+        gap: 9px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .actions button {
+        flex: 1;
+        min-width: 140px;
+      }
+      .log {
+        display: grid;
+        gap: 8px;
+        max-height: 360px;
+        overflow: auto;
+      }
+      .log div {
+        background: rgba(255, 255, 255, 0.055);
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        padding: 10px;
+      }
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: #050204;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 30;
+        padding: 18px;
+      }
+      .modal.on {
+        display: flex;
+      }
+      .box {
+        width: min(560px, 100%);
+        background: linear-gradient(180deg, #2b0e16, #070304);
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        padding: 24px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .role {
+        font-size: clamp(40px, 13vw, 70px);
+        font-weight: 1000;
+        color: var(--gold2);
+        margin: 0;
+      }
+      .pass {
+        font-size: clamp(28px, 8vw, 48px);
+        font-weight: 1000;
+        margin: 0;
+      }
+      @media (max-width: 760px) {
+        .top {
+          display: block;
+        }
+        .players {
+          grid-template-columns: 1fr;
+        }
+        .dash {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .row {
+          grid-template-columns: 1fr;
+        }
+        .actions button {
+          min-width: 0;
+          width: 100%;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="auth-locked">
+    <section id="auth-gate" class="auth-gate" aria-live="polite">
+      <div id="auth-card" class="auth-card">
+        <div class="auth-emblem" aria-hidden="true">
+          <img src="mafia-emblem.png" alt="" />
+        </div>
+        <p class="auth-eyebrow">PRIVATE MODERATOR ACCESS</p>
+        <h1>Checking access…</h1>
+        <p class="hint">Please wait while your approval status is verified.</p>
+      </div>
+    </section>
+    <div class="wrap">
+      <div class="top">
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-hidden="true">
+            <img src="mafia-emblem.png" alt="" />
+          </div>
+          <div class="brand">
+            <h1>Mafia Game Moderator</h1>
+            <p class="hint">
+              Step-by-step handler guide with autosave, live dashboard and full
+              game log.
+            </p>
+            <span class="credit">by Nima</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button
+            id="auth-account-button"
+            class="secondary"
+            onclick="window.MafiaAuth && window.MafiaAuth.openAccount()"
+            hidden
+          >
+            Account
+          </button>
+          <button class="secondary" onclick="health()">Health Check</button
+          ><button class="danger" onclick="menu()">Menu</button>
+        </div>
+      </div>
+      <div id="dash" class="dash"></div>
+      <main id="app"></main>
+    </div>
+    <div id="modal" class="modal">
+      <div class="box">
+        <div id="passView">
+          <p class="small">PASS THE PHONE TO</p>
+          <h2 id="passName" class="pass"></h2>
+          <button class="good" onclick="showRole()">Reveal My Role</button>
+        </div>
+        <div id="roleView" style="display: none">
+          <p class="small">PRIVATE ROLE</p>
+          <h2 id="mName"></h2>
+          <p id="mRole" class="role"></p>
+          <p id="mTeam" class="pill"></p>
+          <p id="mDesc" class="hint"></p>
+          <button class="danger" onclick="hideRoleAndAdvance()">
+            Hide Role & Continue
+          </button>
+        </div>
+      </div>
+    </div>
+    <script src="auth.js?v=1"></script>
+    <script src="app.js?v=17"></script>
+  </body>
+</html>

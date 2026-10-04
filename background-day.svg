@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-label="Original noir town square day backdrop">
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#9d4b39"/><stop offset=".42" stop-color="#56201f"/><stop offset=".74" stop-color="#1b0a0d"/><stop offset="1" stop-color="#050203"/></linearGradient>
+    <radialGradient id="sun"><stop stop-color="#ffe5a0" stop-opacity=".88"/><stop offset=".35" stop-color="#e8a94d" stop-opacity=".44"/><stop offset="1" stop-color="#d88333" stop-opacity="0"/></radialGradient>
+    <linearGradient id="stone" x2="0" y2="1"><stop stop-color="#25151a"/><stop offset="1" stop-color="#070304"/></linearGradient>
+    <pattern id="rays" width="1600" height="1000" patternUnits="userSpaceOnUse"><path d="M1260 170L0 40v160zm0 0L1600 360v170zm0 0L150 720l120 130zm0 0L810 1000h180z" fill="#f6cf71" fill-opacity=".045"/></pattern>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#sky)"/>
+  <rect width="1600" height="1000" fill="url(#rays)"/>
+  <circle cx="1260" cy="175" r="270" fill="url(#sun)"/>
+  <circle cx="1260" cy="175" r="92" fill="#f5d07b" fill-opacity=".38"/>
+  <g fill="#080305" fill-opacity=".82">
+    <path d="M0 650l110-90 95 44 120-140 116 90 106-150 128 154 105-66 122 120 120-95 100 66 115-130 123 145 110-72 150 132v342H0z"/>
+    <path d="M0 748h1600v252H0z"/>
+  </g>
+  <g transform="translate(800 570)">
+    <path d="M-290 180V-12h580v192z" fill="url(#stone)" stroke="#d4af37" stroke-opacity=".2" stroke-width="4"/>
+    <path d="M-340-12L0-205 340-12z" fill="#0b0507" stroke="#d4af37" stroke-opacity=".34" stroke-width="6"/>
+    <path d="M-245-12h490M-270 180h540" stroke="#d4af37" stroke-opacity=".32" stroke-width="8"/>
+    <g fill="#050203" stroke="#d4af37" stroke-opacity=".2" stroke-width="3"><path d="M-220 0h62v180h-62z"/><path d="M-105 0h62v180h-62z"/><path d="M43 0h62v180H43z"/><path d="M158 0h62v180h-62z"/></g>
+    <path d="M-34 180V72h68v108" fill="#5a1724" fill-opacity=".45" stroke="#d4af37" stroke-opacity=".35" stroke-width="4"/>
+    <circle cy="-73" r="40" fill="none" stroke="#d4af37" stroke-opacity=".36" stroke-width="6"/><path d="M0-105v32l24 16" fill="none" stroke="#f0d77a" stroke-opacity=".4" stroke-width="5"/>
+  </g>
+  <g fill="#020102"><path d="M0 850h1600v150H0z"/><circle cx="190" cy="850" r="34"/><path d="M160 880h60l34 120H126z"/><circle cx="340" cy="860" r="31"/><path d="M312 888h56l30 112h-116z"/><circle cx="1260" cy="856" r="32"/><path d="M1230 886h60l32 114h-124z"/><circle cx="1408" cy="846" r="35"/><path d="M1376 878h64l36 122h-136z"/></g>
+  <path d="M0 842h1600" stroke="#e1b94c" stroke-opacity=".3" stroke-width="5"/>
+</svg>

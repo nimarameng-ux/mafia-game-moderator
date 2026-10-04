@@ -1,13 +1,16 @@
 {
   "name": "mafia-game-moderator",
   "private": true,
-  "version": "16.0.0",
+  "version": "17.0.0",
   "description": "Static, no-build Mafia game moderator app. package.json exists only to run the automated smoke tests in tests/ — it is not required to run the app itself, which is plain HTML/CSS/JS served as-is.",
   "scripts": {
     "test:smoke": "node tests/smoke.js",
     "test:smoke-negative": "node tests/smoke-negative.js",
     "test:migration": "node tests/migration.js",
-    "test": "npm run test:smoke && npm run test:smoke-negative && npm run test:migration"
+    "test:night1": "node tests/night1-regression.js",
+    "test:auth": "node tests/auth.js",
+    "test:acceptance": "node tests/acceptance.js",
+    "test": "npm run test:smoke && npm run test:smoke-negative && npm run test:migration && npm run test:night1 && npm run test:auth && npm run test:acceptance"
   },
   "devDependencies": {
     "jsdom": "^29.1.1"

@@ -18,8 +18,8 @@ let appJs = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
 
 const before = appJs.length;
 appJs = appJs.replace(
-  /\/\*CANONICAL: the only reset path in the served app\*\/function resetGame\(\)\{[^}]*\}/,
-  ''
+  'function resetGame() {',
+  'function resetGameMissing() {'
 );
 if (appJs.length === before) {
   console.log('FAIL - sabotage step did not actually remove resetGame() from app.js — this test is not valid, check the regex against the current file');
@@ -27,7 +27,7 @@ if (appJs.length === before) {
 }
 
 const htmlWithInlinedScript = html.replace(
-  /<script src="app\.js\?v=16"><\/script>/,
+  /<script src="app\.js\?v=17"><\/script>/,
   `<script>${appJs}</script>`
 );
 
@@ -55,7 +55,7 @@ assert(
   'error screen names the specific missing function (resetGame)'
 );
 assert(
-  !w.document.getElementById('app').innerHTML.includes('Setup 1/8'),
+  !w.document.getElementById('app').innerHTML.includes('Setup 1/9'),
   'the broken Setup screen is NOT shown when a required function is missing'
 );
 
